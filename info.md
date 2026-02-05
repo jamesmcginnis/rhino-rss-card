@@ -55,7 +55,6 @@ max_items: "20"
 
 ### News
 - BBC World: `http://feeds.bbci.co.uk/news/world/rss.xml`
-- Reuters: `https://feeds.reuters.com/reuters/topNews`
 - NY Times: `https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml`
 
 ### Tech
