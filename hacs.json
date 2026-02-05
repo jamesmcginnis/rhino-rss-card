@@ -1,0 +1,7 @@
+{
+  "name": "Rhino RSS Card",
+  "content_in_root": true,
+  "filename": "rhino-rss-card.js",
+  "render_readme": true,
+  "homeassistant": "2024.1.0"
+}
