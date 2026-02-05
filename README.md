@@ -64,7 +64,6 @@ type: custom:rhino-rss-card
 feeds:
   - http://feeds.bbci.co.uk/news/world/rss.xml
   - https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml
-  - https://feeds.reuters.com/reuters/topNews
 background_color: "#1c1c1c"
 text_color: "#ffffff"
 bullet_color: "#ffa500"
