@@ -92,7 +92,6 @@ Here are some popular RSS feeds you can use:
 
 ### News
 - BBC World News: `http://feeds.bbci.co.uk/news/world/rss.xml`
-- Reuters Top News: `https://feeds.reuters.com/reuters/topNews`
 - New York Times: `https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml`
 - CNN Top Stories: `http://rss.cnn.com/rss/cnn_topstories.rss`
 
