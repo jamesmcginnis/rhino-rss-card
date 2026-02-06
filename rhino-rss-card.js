@@ -4,6 +4,8 @@
 - A scrolling RSS ticker with full customization
   */
 
+console.log(‘Rhino RSS Card: Script is loading…’);
+
 window.customCards = window.customCards || [];
 window.customCards.push({
 type: “rhino-rss-card”,
@@ -11,6 +13,8 @@ name: “Rhino RSS Card”,
 description: “A scrolling RSS ticker with full color customization.”,
 preview: true
 });
+
+console.log(‘Rhino RSS Card: Registered in customCards’);
 
 /**
 
@@ -277,6 +281,7 @@ this.dispatchEvent(event);
 }
 }
 customElements.define(“rhino-rss-editor”, RhinoRSSEditor);
+console.log(‘Rhino RSS Card: Editor element defined’);
 
 /**
 
@@ -509,3 +514,5 @@ clearInterval(this._refreshTimer);
 }
 
 customElements.define(“rhino-rss-card”, RhinoRSSCard);
+console.log(‘Rhino RSS Card: Main card element defined’);
+console.log(‘Rhino RSS Card: Successfully loaded and ready to use’);
