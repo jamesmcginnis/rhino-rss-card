@@ -308,11 +308,15 @@ this._refreshTimer = null;
 }
 
 setConfig(config) {
-this._config = config || {};
+const configStr = JSON.stringify(config);
+const configChanged = this._lastConfigStr !== configStr;
 
 ```
-// If card is already initialized, apply changes
-if (this.container && this.ticker) {
+this._config = config || {};
+this._lastConfigStr = configStr;
+
+// Only apply changes if config actually changed and card is initialized
+if (configChanged && this.container && this.ticker) {
   this._applyStyles();
 }
 ```
@@ -328,8 +332,9 @@ const textColor = this._config.text_color || "#ffffff";
 const bulletColor = this._config.bullet_color || "#ffa500";
 const fontSize = (this._config.font_size || "16") + "px";
 
-// Check if we need to re-render content (font size changed)
-const fontSizeChanged = this.ticker.style.fontSize !== fontSize;
+// Check if font size actually changed from last applied value
+const fontSizeChanged = this._lastAppliedFontSize && this._lastAppliedFontSize !== fontSize;
+this._lastAppliedFontSize = fontSize;
 
 this.container.style.backgroundColor = bgColor;
 this.ticker.style.color = textColor;
