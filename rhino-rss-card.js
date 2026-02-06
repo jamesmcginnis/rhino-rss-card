@@ -33,7 +33,7 @@ preview: true
 
 setConfig(config) {
 this._config = { …this._config, …config };
-this._rendered = false; // Force re-render with new config
+this._rendered = false;
 if (this._hass) {
 this._render();
 }
@@ -350,15 +350,8 @@ if (fontSizeChanged && this._articles && this._articles.length > 0) {
 }
 
 set hass(hass) {
-const isFirstInit = !this.container;
 this._hass = hass;
-
-```
-if (isFirstInit) {
-  this._init();
-}
-```
-
+if (!this.container) this._init();
 }
 
 _init() {
