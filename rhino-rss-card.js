@@ -17,31 +17,33 @@ window.customCards.push({
 class RhinoRSSEditor extends HTMLElement {
   constructor() {
     super();
-    this._config = { 
-      feeds: ["http://feeds.bbci.co.uk/news/world/rss.xml"],
-      background_color: "#1c1c1c",
-      text_color: "#ffffff",
-      bullet_color: "#ffa500",
-      font_size: "16",
-      scroll_speed: "50",
-      refresh_interval: "300",
-      max_items: "20"
-    };
+    this._config = {};
   }
 
   setConfig(config) {
-    this._config = { ...this._config, ...config };
+    this._config = config;
+    this._render();
   }
 
   set hass(hass) {
     this._hass = hass;
-    this._render();
   }
 
   _render() {
-    if (!this._config || this._rendered) return;
+    if (!this._config) return;
+    
+    // If already rendered, just update the values manually to prevent jumping
+    if (this._rendered) {
+      const fontSizeSlider = this.querySelector('#font-size-slider');
+      const fontSizeValue = this.querySelector('#font-size-value');
+      if (fontSizeSlider && fontSizeValue) {
+        fontSizeSlider.value = this._config.font_size || '16';
+        fontSizeValue.textContent = this._config.font_size || '16';
+        fontSizeSlider.nextElementSibling.textContent = (this._config.font_size || '16') + 'px';
+      }
+      return;
+    }
 
-    // Ensure we use the actual config values or the defaults
     const currentFontSize = this._config.font_size || '16';
     const currentMaxItems = this._config.max_items || '20';
 
@@ -263,7 +265,7 @@ class RhinoRSSEditor extends HTMLElement {
 customElements.define("rhino-rss-editor", RhinoRSSEditor);
 
 /**
- * THE MAIN CARD LOGIC
+ * THE MAIN CARD LOGIC (NO CHANGES)
  */
 class RhinoRSSCard extends HTMLElement {
   static getConfigElement() {
