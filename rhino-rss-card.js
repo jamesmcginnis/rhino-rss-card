@@ -308,16 +308,16 @@ this._refreshTimer = null;
 }
 
 setConfig(config) {
-const configStr = JSON.stringify(config);
-const configChanged = this._lastConfigStr !== configStr;
+this._config = config || {};
 
 ```
-this._config = config || {};
-this._lastConfigStr = configStr;
-
-// Only apply changes if config actually changed and card is initialized
-if (configChanged && this.container && this.ticker) {
-  this._applyStyles();
+// If card is already initialized, check if we need to apply changes
+if (this.container && this.ticker) {
+  const configStr = JSON.stringify(config);
+  if (this._lastConfigStr !== configStr) {
+    this._lastConfigStr = configStr;
+    this._applyStyles();
+  }
 }
 ```
 
@@ -367,6 +367,10 @@ this.innerHTML = `<style> :host { --bullet-color: #ffa500; } ha-card {  padding:
 ```
 this.container = this.querySelector("#card-container");
 this.ticker = this.querySelector("#ticker");
+
+// Store initial config state
+this._lastConfigStr = JSON.stringify(this._config);
+
 this._applyStyles();
 this._fetchRSS();
 this._startRefreshTimer();
