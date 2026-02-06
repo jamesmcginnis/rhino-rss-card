@@ -301,11 +301,12 @@ class RhinoRSSCard extends HTMLElement {
     this._config = config || {};
     
     if (this.container) {
+      // Always apply styles when config changes
       this._applyStyles();
+      
+      // Only refetch if feeds changed
       if (oldFeeds !== JSON.stringify(config.feeds)) {
         this._fetchRSS();
-      } else {
-        this._updateScrollSpeed();
       }
     }
   }
@@ -322,10 +323,6 @@ class RhinoRSSCard extends HTMLElement {
     this.ticker.style.color = textColor;
     this.ticker.style.fontSize = fontSize;
     this.style.setProperty('--bullet-color', bulletColor);
-  }
-
-  _updateScrollSpeed() {
-    // Animation will automatically use the new speed on next frame
   }
 
   set hass(hass) {
@@ -356,6 +353,7 @@ class RhinoRSSCard extends HTMLElement {
           display: inline-block;
           padding-left: 100%;
           will-change: transform;
+          font-family: var(--primary-font-family, Roboto, sans-serif);
         }
         .ticker-item {
           display: inline;
