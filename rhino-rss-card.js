@@ -31,6 +31,10 @@ class RhinoRSSEditor extends HTMLElement {
 
   setConfig(config) {
     this._config = { ...this._config, ...config };
+    this._rendered = false; // Force re-render with new config
+    if (this._hass) {
+      this._render();
+    }
   }
 
   set hass(hass) {
@@ -39,7 +43,8 @@ class RhinoRSSEditor extends HTMLElement {
   }
 
   _render() {
-    if (!this._config || this._rendered) return;
+    if (!this._config) return;
+    if (this._rendered) return;
 
     this.innerHTML = `
       <style>
@@ -297,25 +302,11 @@ class RhinoRSSCard extends HTMLElement {
   }
 
   setConfig(config) {
-    const oldConfig = this._config ? JSON.stringify(this._config) : null;
     this._config = config || {};
     
-    // If card is already initialized
-    if (this.container) {
-      const newConfig = JSON.stringify(this._config);
-      
-      // Check if config actually changed
-      if (oldConfig !== newConfig) {
-        // Apply style changes immediately
-        this._applyStyles();
-        
-        // Only refetch RSS if feeds changed
-        const oldFeeds = oldConfig ? JSON.parse(oldConfig).feeds : null;
-        const newFeeds = this._config.feeds;
-        if (JSON.stringify(oldFeeds) !== JSON.stringify(newFeeds)) {
-          this._fetchRSS();
-        }
-      }
+    // If card is already initialized, apply changes
+    if (this.container && this.ticker) {
+      this._applyStyles();
     }
   }
 
@@ -340,7 +331,12 @@ class RhinoRSSCard extends HTMLElement {
 
   set hass(hass) {
     this._hass = hass;
-    if (!this.container) this._init();
+    if (!this.container) {
+      this._init();
+    } else {
+      // If already initialized, apply any pending style changes
+      this._applyStyles();
+    }
   }
 
   _init() {
