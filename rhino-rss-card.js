@@ -41,6 +41,10 @@ class RhinoRSSEditor extends HTMLElement {
   _render() {
     if (!this._config || this._rendered) return;
 
+    // Ensure we use the actual config values or the defaults
+    const currentFontSize = this._config.font_size || '16';
+    const currentMaxItems = this._config.max_items || '20';
+
     this.innerHTML = `
       <style>
         .card-config { 
@@ -144,10 +148,10 @@ class RhinoRSSEditor extends HTMLElement {
         <div class="section-title">Ticker Settings</div>
         
         <div class="slider-container">
-          <label class="config-label">Font Size: <span id="font-size-value">${this._config.font_size || '16'}</span>px</label>
+          <label class="config-label">Font Size: <span id="font-size-value">${currentFontSize}</span>px</label>
           <div class="slider-row">
-            <input type="range" class="slider" id="font-size-slider" min="8" max="32" value="${this._config.font_size || '16'}">
-            <span class="slider-value">${this._config.font_size || '16'}px</span>
+            <input type="range" class="slider" id="font-size-slider" min="8" max="32" value="${currentFontSize}">
+            <span class="slider-value">${currentFontSize}px</span>
           </div>
         </div>
 
@@ -168,10 +172,10 @@ class RhinoRSSEditor extends HTMLElement {
         </div>
 
         <div class="slider-container">
-          <label class="config-label">Max Items: <span id="max-items-value">${this._config.max_items || '20'}</span></label>
+          <label class="config-label">Max Items: <span id="max-items-value">${currentMaxItems}</span></label>
           <div class="slider-row">
-            <input type="range" class="slider" id="max-items-slider" min="5" max="50" value="${this._config.max_items || '20'}">
-            <span class="slider-value">${this._config.max_items || '20'}</span>
+            <input type="range" class="slider" id="max-items-slider" min="5" max="100" value="${currentMaxItems}">
+            <span class="slider-value">${currentMaxItems}</span>
           </div>
         </div>
 
@@ -188,49 +192,39 @@ class RhinoRSSEditor extends HTMLElement {
       </div>
     `;
 
-    // Color pickers
+    // Event Listeners
     this.querySelector('#bg-color-picker').addEventListener('change', (e) => this._updateConfig({ background_color: e.target.value }));
     this.querySelector('#text-color-picker').addEventListener('change', (e) => this._updateConfig({ text_color: e.target.value }));
     this.querySelector('#bullet-color-picker').addEventListener('change', (e) => this._updateConfig({ bullet_color: e.target.value }));
 
-    // Sliders
     const fontSizeSlider = this.querySelector('#font-size-slider');
-    const fontSizeValue = this.querySelector('#font-size-value');
-    const fontSizeDisplay = fontSizeSlider.nextElementSibling;
     fontSizeSlider.addEventListener('input', (e) => {
-      fontSizeValue.textContent = e.target.value;
-      fontSizeDisplay.textContent = e.target.value + 'px';
+      this.querySelector('#font-size-value').textContent = e.target.value;
+      fontSizeSlider.nextElementSibling.textContent = e.target.value + 'px';
       this._updateConfig({ font_size: e.target.value });
     });
 
     const speedSlider = this.querySelector('#speed-slider');
-    const speedValue = this.querySelector('#speed-value');
-    const speedDisplay = speedSlider.nextElementSibling;
     speedSlider.addEventListener('input', (e) => {
-      speedValue.textContent = e.target.value;
-      speedDisplay.textContent = e.target.value + 'px/s';
+      this.querySelector('#speed-value').textContent = e.target.value;
+      speedSlider.nextElementSibling.textContent = e.target.value + 'px/s';
       this._updateConfig({ scroll_speed: e.target.value });
     });
 
     const refreshSlider = this.querySelector('#refresh-slider');
-    const refreshValue = this.querySelector('#refresh-value');
-    const refreshDisplay = refreshSlider.nextElementSibling;
     refreshSlider.addEventListener('input', (e) => {
-      refreshValue.textContent = e.target.value;
-      refreshDisplay.textContent = Math.floor(e.target.value / 60) + 'min';
+      this.querySelector('#refresh-value').textContent = e.target.value;
+      refreshSlider.nextElementSibling.textContent = Math.floor(e.target.value / 60) + 'min';
       this._updateConfig({ refresh_interval: e.target.value });
     });
 
     const maxItemsSlider = this.querySelector('#max-items-slider');
-    const maxItemsValue = this.querySelector('#max-items-value');
-    const maxItemsDisplay = maxItemsSlider.nextElementSibling;
     maxItemsSlider.addEventListener('input', (e) => {
-      maxItemsValue.textContent = e.target.value;
-      maxItemsDisplay.textContent = e.target.value;
+      this.querySelector('#max-items-value').textContent = e.target.value;
+      maxItemsSlider.nextElementSibling.textContent = e.target.value;
       this._updateConfig({ max_items: e.target.value });
     });
 
-    // Feed management
     this.querySelectorAll('.feed-input').forEach(input => {
       input.addEventListener('change', (e) => {
         const newFeeds = [...this._config.feeds];
@@ -318,7 +312,6 @@ class RhinoRSSCard extends HTMLElement {
     
     this.container.style.backgroundColor = bgColor;
     this.ticker.style.color = textColor;
-    this.ticker.style.fontSize = fontSize; // Explicitly applying to content
     this.style.setProperty('--bullet-color', bulletColor);
     this.style.setProperty('--card-font-size', fontSize);
   }
@@ -384,18 +377,13 @@ class RhinoRSSCard extends HTMLElement {
   }
 
   _startRefreshTimer() {
-    if (this._refreshTimer) {
-      clearInterval(this._refreshTimer);
-    }
-    
+    if (this._refreshTimer) clearInterval(this._refreshTimer);
     const refreshInterval = parseInt(this._config.refresh_interval || "300") * 1000;
-    this._refreshTimer = setInterval(() => {
-      this._fetchRSS();
-    }, refreshInterval);
+    this._refreshTimer = setInterval(() => this._fetchRSS(), refreshInterval);
   }
 
   async _fetchRSS() {
-    const feeds = (this._config && this._config.feeds) || [];
+    const feeds = this._config.feeds || [];
     const validFeeds = feeds.filter(url => url && url.trim().startsWith("http"));
     
     if (validFeeds.length === 0) {
@@ -423,7 +411,6 @@ class RhinoRSSCard extends HTMLElement {
       });
       
       allItems.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
-      
       const maxItems = parseInt(this._config.max_items || "20");
       this._articles = allItems.slice(0, maxItems);
       this._render();
@@ -447,7 +434,6 @@ class RhinoRSSCard extends HTMLElement {
       const source = item.source || "Unknown";
       const date = new Date(item.pubDate).toLocaleDateString();
       const link = item.link || "#";
-      
       return `<span class="ticker-item" onclick="window.open('${link}', '_blank')">${title} (${source} - ${date})</span>${index < this._articles.length - 1 ? '<span class="bullet">●</span>' : ''}`;
     }).join('');
 
@@ -456,9 +442,7 @@ class RhinoRSSCard extends HTMLElement {
   }
 
   _startAnimation() {
-    if (this._animationFrame) {
-      cancelAnimationFrame(this._animationFrame);
-    }
+    if (this._animationFrame) cancelAnimationFrame(this._animationFrame);
 
     let position = 0;
     let lastTime = performance.now();
@@ -471,9 +455,7 @@ class RhinoRSSCard extends HTMLElement {
       position += speed * deltaTime;
       const contentWidth = this.ticker.scrollWidth / 2;
 
-      if (position >= contentWidth) {
-        position = 0;
-      }
+      if (position >= contentWidth) position = 0;
 
       this.ticker.style.transform = `translateX(-${position}px)`;
       this._animationFrame = requestAnimationFrame(animate);
