@@ -146,7 +146,7 @@ class RhinoRSSEditor extends HTMLElement {
         <div class="slider-container">
           <label class="config-label">Font Size: <span id="font-size-value">${this._config.font_size || '16'}</span>px</label>
           <div class="slider-row">
-            <input type="range" class="slider" id="font-size-slider" min="12" max="32" value="${this._config.font_size || '16'}">
+            <input type="range" class="slider" id="font-size-slider" min="8" max="32" value="${this._config.font_size || '16'}">
             <span class="slider-value">${this._config.font_size || '16'}px</span>
           </div>
         </div>
@@ -297,22 +297,30 @@ class RhinoRSSCard extends HTMLElement {
   }
 
   setConfig(config) {
-    const oldFeeds = JSON.stringify(this._config?.feeds);
+    const oldConfig = this._config ? JSON.stringify(this._config) : null;
     this._config = config || {};
     
+    // If card is already initialized
     if (this.container) {
-      // Always apply styles when config changes
-      this._applyStyles();
+      const newConfig = JSON.stringify(this._config);
       
-      // Only refetch if feeds changed
-      if (oldFeeds !== JSON.stringify(config.feeds)) {
-        this._fetchRSS();
+      // Check if config actually changed
+      if (oldConfig !== newConfig) {
+        // Apply style changes immediately
+        this._applyStyles();
+        
+        // Only refetch RSS if feeds changed
+        const oldFeeds = oldConfig ? JSON.parse(oldConfig).feeds : null;
+        const newFeeds = this._config.feeds;
+        if (JSON.stringify(oldFeeds) !== JSON.stringify(newFeeds)) {
+          this._fetchRSS();
+        }
       }
     }
   }
 
   _applyStyles() {
-    if (!this.container) return;
+    if (!this.container || !this.ticker) return;
     
     const bgColor = this._config.background_color || "#1c1c1c";
     const textColor = this._config.text_color || "#ffffff";
@@ -323,6 +331,11 @@ class RhinoRSSCard extends HTMLElement {
     this.ticker.style.color = textColor;
     this.ticker.style.fontSize = fontSize;
     this.style.setProperty('--bullet-color', bulletColor);
+    
+    // Force a re-render of the ticker to apply font size changes
+    if (this._articles && this._articles.length > 0) {
+      this._renderContent();
+    }
   }
 
   set hass(hass) {
@@ -441,6 +454,12 @@ class RhinoRSSCard extends HTMLElement {
       this.ticker.innerHTML = '<span class="ticker-item">No articles available</span>';
       return;
     }
+
+    this._renderContent();
+  }
+
+  _renderContent() {
+    if (!this.ticker || !this._articles || this._articles.length === 0) return;
 
     // Build the ticker content
     const tickerHTML = this._articles.map((item, index) => {
