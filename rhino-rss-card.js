@@ -17,6 +17,7 @@ window.customCards.push({
 class RhinoRSSEditor extends HTMLElement {
   constructor() {
     super();
+    // Start with an empty config so we don't overwrite with defaults prematurely
     this._config = {};
   }
 
@@ -31,21 +32,27 @@ class RhinoRSSEditor extends HTMLElement {
 
   _render() {
     if (!this._config) return;
-    
-    // If already rendered, just update the values manually to prevent jumping
+
+    // Pull current values or fall back to defaults only if they don't exist in config
+    const currentFontSize = this._config.font_size !== undefined ? this._config.font_size : "16";
+    const currentMaxItems = this._config.max_items !== undefined ? this._config.max_items : "20";
+    const currentBg = this._config.background_color || "#1c1c1c";
+    const currentText = this._config.text_color || "#ffffff";
+    const currentBullet = this._config.bullet_color || "#ffa500";
+    const currentSpeed = this._config.scroll_speed || "50";
+    const currentRefresh = this._config.refresh_interval || "300";
+
+    // If we have already rendered the structure, just update the input values
     if (this._rendered) {
-      const fontSizeSlider = this.querySelector('#font-size-slider');
-      const fontSizeValue = this.querySelector('#font-size-value');
-      if (fontSizeSlider && fontSizeValue) {
-        fontSizeSlider.value = this._config.font_size || '16';
-        fontSizeValue.textContent = this._config.font_size || '16';
-        fontSizeSlider.nextElementSibling.textContent = (this._config.font_size || '16') + 'px';
-      }
+      this.querySelector('#font-size-slider').value = currentFontSize;
+      this.querySelector('#font-size-value').textContent = currentFontSize;
+      this.querySelector('#font-size-slider').nextElementSibling.textContent = currentFontSize + 'px';
+      
+      this.querySelector('#max-items-slider').value = currentMaxItems;
+      this.querySelector('#max-items-value').textContent = currentMaxItems;
+      this.querySelector('#max-items-slider').nextElementSibling.textContent = currentMaxItems;
       return;
     }
-
-    const currentFontSize = this._config.font_size || '16';
-    const currentMaxItems = this._config.max_items || '20';
 
     this.innerHTML = `
       <style>
@@ -134,15 +141,15 @@ class RhinoRSSEditor extends HTMLElement {
         <div class="section-title">Colors</div>
         <div class="color-grid">
           <div class="color-row">
-            <input type="color" class="color-picker" id="bg-color-picker" value="${this._config.background_color || '#1c1c1c'}">
+            <input type="color" class="color-picker" id="bg-color-picker" value="${currentBg}">
             <label>Background</label>
           </div>
           <div class="color-row">
-            <input type="color" class="color-picker" id="text-color-picker" value="${this._config.text_color || '#ffffff'}">
+            <input type="color" class="color-picker" id="text-color-picker" value="${currentText}">
             <label>Text</label>
           </div>
           <div class="color-row">
-            <input type="color" class="color-picker" id="bullet-color-picker" value="${this._config.bullet_color || '#ffa500'}">
+            <input type="color" class="color-picker" id="bullet-color-picker" value="${currentBullet}">
             <label>Bullet</label>
           </div>
         </div>
@@ -158,18 +165,18 @@ class RhinoRSSEditor extends HTMLElement {
         </div>
 
         <div class="slider-container">
-          <label class="config-label">Scroll Speed: <span id="speed-value">${this._config.scroll_speed || '50'}</span>px/s</label>
+          <label class="config-label">Scroll Speed: <span id="speed-value">${currentSpeed}</span>px/s</label>
           <div class="slider-row">
-            <input type="range" class="slider" id="speed-slider" min="10" max="150" value="${this._config.scroll_speed || '50'}">
-            <span class="slider-value">${this._config.scroll_speed || '50'}px/s</span>
+            <input type="range" class="slider" id="speed-slider" min="10" max="150" value="${currentSpeed}">
+            <span class="slider-value">${currentSpeed}px/s</span>
           </div>
         </div>
 
         <div class="slider-container">
-          <label class="config-label">Refresh Interval: <span id="refresh-value">${this._config.refresh_interval || '300'}</span>s</label>
+          <label class="config-label">Refresh Interval: <span id="refresh-value">${currentRefresh}</span>s</label>
           <div class="slider-row">
-            <input type="range" class="slider" id="refresh-slider" min="60" max="1800" step="60" value="${this._config.refresh_interval || '300'}">
-            <span class="slider-value">${Math.floor((this._config.refresh_interval || 300) / 60)}min</span>
+            <input type="range" class="slider" id="refresh-slider" min="60" max="1800" step="60" value="${currentRefresh}">
+            <span class="slider-value">${Math.floor(currentRefresh / 60)}min</span>
           </div>
         </div>
 
@@ -194,11 +201,12 @@ class RhinoRSSEditor extends HTMLElement {
       </div>
     `;
 
-    // Event Listeners
+    // Color pickers
     this.querySelector('#bg-color-picker').addEventListener('change', (e) => this._updateConfig({ background_color: e.target.value }));
     this.querySelector('#text-color-picker').addEventListener('change', (e) => this._updateConfig({ text_color: e.target.value }));
     this.querySelector('#bullet-color-picker').addEventListener('change', (e) => this._updateConfig({ bullet_color: e.target.value }));
 
+    // Sliders
     const fontSizeSlider = this.querySelector('#font-size-slider');
     fontSizeSlider.addEventListener('input', (e) => {
       this.querySelector('#font-size-value').textContent = e.target.value;
@@ -227,6 +235,7 @@ class RhinoRSSEditor extends HTMLElement {
       this._updateConfig({ max_items: e.target.value });
     });
 
+    // Feed management
     this.querySelectorAll('.feed-input').forEach(input => {
       input.addEventListener('change', (e) => {
         const newFeeds = [...this._config.feeds];
@@ -265,7 +274,7 @@ class RhinoRSSEditor extends HTMLElement {
 customElements.define("rhino-rss-editor", RhinoRSSEditor);
 
 /**
- * THE MAIN CARD LOGIC (NO CHANGES)
+ * THE MAIN CARD LOGIC
  */
 class RhinoRSSCard extends HTMLElement {
   static getConfigElement() {
